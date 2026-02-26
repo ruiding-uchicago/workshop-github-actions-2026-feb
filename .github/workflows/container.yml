@@ -1,0 +1,51 @@
+name: (Internal) Build container
+
+on:
+    workflow_call:
+      inputs:
+        app_version:
+          description: Computed app version
+          type: string
+          required: true
+        registry:
+          type: string
+          required: true
+          default: ghcr.io
+        image:
+          type: string
+          required: true
+
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ inputs.registry }}
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ inputs.registry }}/${{ inputs.image }}
+          tags: |
+            type=pep440,pattern={{version}},value=${{ inputs.app_version }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          pull: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}

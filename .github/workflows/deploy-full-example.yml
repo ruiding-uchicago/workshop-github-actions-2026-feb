@@ -1,0 +1,57 @@
+name: Deploy full CI/CD workflow example
+
+on:
+  # Uncomment this to enable push-based deployment
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - pyproject.toml
+  #     - uv.lock
+  workflow_dispatch:    # Allow manual triggering of the workflow
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  actions: read
+  contents: write
+  packages: write
+  security-events: write
+
+jobs:
+  lint-and-format:
+    name: Lint + format
+    uses: ./.github/workflows/lint-and-format.yml
+
+  scan:
+    name: Scan
+    uses: ./.github/workflows/scan.yml
+
+  test:
+    name: Tests
+    uses: ./.github/workflows/test.yml
+
+  version:
+    name: Compute version
+    uses: ./.github/workflows/version.yml
+
+  container:
+    name: Build + deploy container image
+    needs: [lint-and-format, scan, test, version]
+    if: needs.version.result == 'success'
+    uses: ./.github/workflows/container.yml
+    with:
+      app_version: ${{ needs.version.outputs.app_version }}
+      registry: ghcr.io
+      image: ${{ github.repository }}
+    secrets: inherit
+
+  release:
+    name: Tag + GitHub release
+    needs: [version, container]
+    if: needs.version.result == 'success' && needs.version.outputs.app_version != ''
+    uses: ./.github/workflows/release.yml
+    with:
+      app_version: ${{ needs.version.outputs.app_version }}
+    secrets: inherit

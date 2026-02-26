@@ -1,0 +1,45 @@
+name: (Internal) Release
+
+on:
+  workflow_call:
+    inputs:
+      app_version:
+        type: string
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN || secrets.GITHUB_TOKEN }}
+
+      - name: Setup uv
+        uses: astral-sh/setup-uv@v4
+
+      - name: Bump and commit version
+        run: |
+          uv version ${{ inputs.app_version }}
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git commit -am "Chore: Bump version to ${{ inputs.app_version }}"
+          git push
+
+      - name: Push tag
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+          git tag -a "v${{ inputs.app_version }}" -m "Version ${{ inputs.app_version }}"
+          git push origin "v${{ inputs.app_version }}"
+
+      - name: Create GH release
+        uses: ncipollo/release-action@v1
+        with:
+          generateReleaseNotes: true
+          name: v${{ inputs.app_version }}
+          tag: v${{ inputs.app_version }}

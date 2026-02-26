@@ -1,0 +1,32 @@
+name: (Internal)Download Test Artifacts
+
+on:
+  workflow_call:
+
+jobs:
+  download-artifacts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifact for Python 3.10
+        uses: actions/download-artifact@v4
+        with:
+          name: trends-3.10
+          path: artifacts/python-3.10
+
+      - name: Download artifact for Python 3.11
+        uses: actions/download-artifact@v4
+        with:
+          name: trends-3.11
+          path: artifacts/python-3.11
+
+      - name: Download artifact for Python 3.12
+        uses: actions/download-artifact@v4
+        with:
+          name: trends-3.12
+          path: artifacts/python-3.12
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          find artifacts -type f -name "*.png" || echo "No PNG files found"
+          ls -la artifacts/*/ || echo "No artifact directories found"

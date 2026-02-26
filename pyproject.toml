@@ -1,6 +1,6 @@
 [project]
 name = "sst"
-version = "0.0.1"
+version = "1.0.0"
 description = "A sea surface temperature ML prediction package for workshops (SST + ENSO)."
 readme = "README.md"
 requires-python = ">=3.10"

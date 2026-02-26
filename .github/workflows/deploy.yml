@@ -14,3 +14,10 @@ jobs:
   version:
     name: Compute Version
     uses: ./.github/workflows/version.yml
+
+  release:
+    name: Release version
+    needs: [lint-and-format, version]
+    uses: ./.github/workflows/release.yml
+    with:
+      app_version: ${{ needs.version.outputs.app_version }}

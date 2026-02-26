@@ -1,0 +1,16 @@
+name: Deploy workshop workflow
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint-and-format:
+    name: Lint + format
+    uses: ./.github/workflows/lint-and-format.yml
+
+  version:
+    name: Compute Version
+    uses: ./.github/workflows/version.yml
